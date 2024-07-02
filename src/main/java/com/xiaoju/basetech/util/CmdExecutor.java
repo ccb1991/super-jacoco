@@ -1,12 +1,15 @@
 package com.xiaoju.basetech.util;
 
+import com.xiaoju.basetech.dao.error.NoSystemError;
+import lombok.extern.log4j.Log4j;
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.cs.ext.GBK;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,12 +48,25 @@ public class CmdExecutor {
                 LOG.warn("CmdThreadPoolBusy");
             }
 
-            LOG.info("executeCmd : bash -c " + e.toString());
-            ProcessBuilder var12 = new ProcessBuilder(new String[]{"bash", "-c", e.toString()});
+            LOG.info("命令行命令为：" + e);
+            ProcessBuilder var12;
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+//                String[] cmd=new String[]{"cmd.exe","/C"};
+//                var12= new ProcessBuilder((String[]) ArrayUtils.addAll(cmd, commands));
+                var12 = new ProcessBuilder("cmd.exe","/C", e.toString());
+            } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+//                String[] cmd=new String[]{"bash", "-c"};
+//                var12 = new ProcessBuilder((String[]) ArrayUtils.addAll(cmd, commands));
+                var12 = new ProcessBuilder("bash", "-c", e.toString());
+            } else {
+                throw new NoSystemError("不支持的系统类型");
+            }
             var12.redirectErrorStream(true);
             process = var12.start();
             CmdExecutor.ReadLine readLine = new CmdExecutor.ReadLine(process.getInputStream(), ret, true);
             Future readLineFuture = executor.submit(readLine);
+//            readLine.run();
             long begin = System.currentTimeMillis();
             if (process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
                 LOG.info("readLine.stop();");
@@ -73,6 +89,7 @@ public class CmdExecutor {
     }
 
     private static class ReadLine implements Runnable {
+//    private static class ReadLine  {
         private static final Logger LOGGER = LoggerFactory.getLogger("commandOutputLogger");
         private final InputStream is;
         // private final StringBuffer sb;
@@ -90,7 +107,12 @@ public class CmdExecutor {
 
         @Override
         public void run() {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(this.is));
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new InputStreamReader(this.is, "gbk"));
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
 
             try {
                 String line;

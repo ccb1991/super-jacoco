@@ -36,16 +36,17 @@ public class CodeCloneExecutor {
         coverageReport.setLogFile(logFile);
         try {
             String uuid = coverageReport.getUuid();
-            String nowLocalPath = CODE_ROOT + uuid + "/" + coverageReport.getNowVersion().replace("/", "_");
+            String nowLocalPath = CODE_ROOT + uuid + File.separator + coverageReport.getNowVersion().replace("/", "_");
             coverageReport.setNowLocalPath(nowLocalPath);
-            if (new File(CODE_ROOT + uuid + "/").exists()) {
-                FileUtil.cleanDir(CODE_ROOT + uuid + "/");
+            if (new File(CODE_ROOT + uuid +  File.separator).exists()) {
+                FileUtil.cleanDir(CODE_ROOT + uuid +  File.separator);
             }
             String gitUrl = coverageReport.getGitUrl();
             log.info("uuid {}开始下载代码...", uuid);
             gitHandler.cloneRepository(gitUrl, nowLocalPath, coverageReport.getNowVersion());
             if (coverageReport.getType() == Constants.ReportType.DIFF.val()) {
-                String baseLocalPath = CODE_ROOT + uuid + "/" + coverageReport.getBaseVersion().replace("/", "_");
+                String baseLocalPath = CODE_ROOT + uuid +  File.separator +
+                        coverageReport.getBaseVersion().replace("/", "_");
                 coverageReport.setBaseLocalPath(baseLocalPath);
                 gitHandler.cloneRepository(gitUrl, baseLocalPath, coverageReport.getBaseVersion());
             }

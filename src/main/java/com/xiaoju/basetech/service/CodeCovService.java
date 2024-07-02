@@ -2,6 +2,8 @@ package com.xiaoju.basetech.service;
 
 import com.xiaoju.basetech.entity.*;
 
+import java.io.IOException;
+
 
 /**
  * @author didi
@@ -34,7 +36,7 @@ public interface CodeCovService {
      *
      * @param coverageReport
      */
-    void cloneAndCompileCode(CoverageReportEntity coverageReport);
+    void cloneAndCompileCode(CoverageReportEntity coverageReport) throws IOException;
 
     /**
      * 获取diff

@@ -46,6 +46,7 @@ public class CodeCovController {
     }
 
     /**
+     * 触发功能测试覆盖率统计
      *
      * @param envCoverRequest
      * @return

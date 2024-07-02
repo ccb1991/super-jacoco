@@ -232,7 +232,7 @@ public class CodeCovServiceImpl implements CodeCovService {
     }
 
     @Override
-    public void cloneAndCompileCode(CoverageReportEntity coverageReport) {
+    public void cloneAndCompileCode(CoverageReportEntity coverageReport) throws IOException {
         // 下载代码
         coverageReport.setRequestStatus(Constants.JobStatus.CLONING.val());
         coverageReportDao.updateCoverageReportByReport(coverageReport);
@@ -291,7 +291,8 @@ public class CodeCovServiceImpl implements CodeCovService {
                 coverageReport.setSubModule(envCoverRequest.getSubModule());
             }
 
-            if (envCoverRequest.getBaseVersion().equals(envCoverRequest.getNowVersion()) && envCoverRequest.getType() == Constants.ReportType.DIFF.val()) {
+            if (envCoverRequest.getBaseVersion().equals(envCoverRequest.getNowVersion()) &&
+                    envCoverRequest.getType() == Constants.ReportType.DIFF.val()) {
                 coverageReport.setBranchCoverage((double) 100);
                 coverageReport.setLineCoverage((double) 100);
                 coverageReport.setRequestStatus(Constants.JobStatus.NODIFF.val());
@@ -303,8 +304,12 @@ public class CodeCovServiceImpl implements CodeCovService {
             coverageReport.setRequestStatus(Constants.JobStatus.WAITING.val());
             coverageReportDao.insertCoverageReportById(coverageReport);
             deployInfoDao.insertDeployId(envCoverRequest.getUuid(), envCoverRequest.getAddress(), envCoverRequest.getPort());
-            new Thread(() -> {
-                cloneAndCompileCode(coverageReport);
+//            new Thread(() -> {
+//                try {
+                    cloneAndCompileCode(coverageReport);
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
                 if (coverageReport.getRequestStatus() != Constants.JobStatus.COMPILE_DONE.val()) {
                     log.info("{}计算覆盖率具体步骤...编译失败uuid={}", Thread.currentThread().getName(), coverageReport.getUuid());
                     return;
@@ -317,7 +322,7 @@ public class CodeCovServiceImpl implements CodeCovService {
                     }
                 }
                 calculateEnvCov(coverageReport);
-            }).start();
+//            }).start();
         } catch (Exception e) {
             throw new ResponseException(e.getMessage());
         }
@@ -622,12 +627,12 @@ public class CodeCovServiceImpl implements CodeCovService {
                 execFileLoader.load(new File(ExecFile));
             }
         } catch (Exception e) {
-            log.error("ExecFiles 合并失败 errorMessege is {}", e.fillInStackTrace());
+            log.error("ExecFiles 合并失败 errorMessage is {}", e.fillInStackTrace());
         }
         try {
             execFileLoader.save(new File(NewFileName), false);
         } catch (Exception e) {
-            log.error("ExecFiles 保存失败 errorMessege is {}", e.fillInStackTrace());
+            log.error("ExecFiles 保存失败 errorMessage is {}", e.fillInStackTrace());
         }
     }
 }
